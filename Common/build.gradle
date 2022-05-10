@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-archivesBaseName = "${mod_name}-common-${minecraft_version}"
+archivesBaseName = "${project_id}_common_${minecraft_version}"
 
 repositories {
     maven {
@@ -24,6 +24,9 @@ loom {
     }
 }
 
+remapJar.enabled = false
+remapSourcesJar.enabled = false
+
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.layered() {
@@ -33,11 +36,15 @@ dependencies {
     //DO NOT USE IN PROJECT
     //Provides necessary stuff for project to compile
     modCompileOnly("org.quiltmc:quilt-loader:${quilt_loader_version}")
+    implementation project(":Api")
 
-    implementation group:'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+    compileOnly group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
+    testCompileOnly group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
+    annotationProcessor group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
 }
 
 processResources {
+    from project(":Api").sourceSets.main.resources
     def buildProps = project.properties.clone()
 
     filesMatching(['pack.mcmeta']) {
@@ -45,22 +52,7 @@ processResources {
         expand buildProps
     }
 }
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.archivesBaseName
-            version project.version
-            from components.java
-        }
-    }
 
-    repositories {
-        maven {
-            url "file://" + System.getenv("local_maven")
-        }
-    }
+tasks.withType(JavaCompile) {
+    source(project(":Api").sourceSets.main.allSource)
 }
-
-remapJar.enabled = false
-remapSourcesJar.enabled = false

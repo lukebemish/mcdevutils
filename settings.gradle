@@ -36,5 +36,5 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'MultiLoader'
-include("Common", "Fabric", "Forge", "Quilt")
+rootProject.name = 'mcdevutils'
+include("Api", "Common", "Fabric", "Forge", "Quilt")

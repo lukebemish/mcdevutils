@@ -1,28 +1,37 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy-gradle-plugin'
+    id 'java'
+    id 'groovy'
+    id 'maven-publish'
+}
+
 subprojects {
-    
+
     apply plugin: 'java'
-    
+
     java.toolchain.languageVersion = JavaLanguageVersion.of(17)
     java.withSourcesJar()
-    java.withJavadocJar()
-        
+
     jar {
-        manifest {
-            attributes([
-                'Specification-Title'     : mod_name,
-                'Specification-Vendor'    : mod_author,
-                'Specification-Version'   : project.jar.archiveVersion,
-                'Implementation-Title'    : project.name,
-                'Implementation-Version'  : project.jar.archiveVersion,
-                'Implementation-Vendor'   : mod_author,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'Timestampe'              : System.currentTimeMillis(),
-                'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
-                'Build-On-Minecraft'      : minecraft_version
-            ])
+        classifier null
+        archiveName "${project.name}-${project.version}.jar"
+    }
+    sourcesJar {
+        classifier null
+        archiveName "${project.name}-${project.version}-sources.jar"
+    }
+    configurations {
+        instrumentedJars {
+            canBeConsumed = true
+            canBeResolved = false
         }
     }
-    
+    artifacts {
+        instrumentedJars(jar)
+        instrumentedJars(sourcesJar)
+    }
+
     repositories {
         mavenCentral()
 
@@ -46,7 +55,6 @@ subprojects {
             url 'https://maven.quiltmc.org/repository/release/'
         }
     }
-    
 
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = 'UTF-8'
@@ -58,5 +66,69 @@ subprojects {
     // other mod developers.
     tasks.withType(GenerateModuleMetadata) {
         enabled = false
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    bundledJars {
+        canBeConsumed = false
+        canBeResolved = true
+    }
+    bundle
+    implementation.extendsFrom(bundle)
+}
+
+dependencies {
+    implementation 'org.ow2.asm:asm:9.3'
+    implementation 'org.ow2.asm:asm-tree:9.3'
+    compileOnly project(":Api")
+    bundledJars(project(path: ":Common", configuration: "instrumentedJars")) { transitive false }
+    bundledJars(project(path: ":Fabric", configuration: "instrumentedJars")) { transitive false }
+    bundledJars(project(path: ":Forge", configuration: "instrumentedJars")) { transitive false }
+    bundledJars(project(path: ":Quilt", configuration: "instrumentedJars")) { transitive false }
+}
+
+processResources {
+    from project(":Api").sourceSets.main.resources
+    from(project.zipTree(bundleStuff()))
+}
+
+def bundleStuff() {
+    final var outPath = project.buildDir.toPath().resolve("projectszip").resolve("bundled.zip")
+    final var task = tasks.create("${name}Bundle", Zip) {
+        into("bundled") {
+            from(configurations.bundledJars)
+            rename(filename -> filename.toLowerCase(Locale.ROOT))
+        }
+        destinationDirectory.set(outPath.getParent().toFile())
+        archiveName("bundled.zip")
+    }
+    tasks.getByName('processResources').dependsOn(task)
+    return outPath
+}
+
+
+gradlePlugin {
+    plugins {
+        mcdevAnnotations {
+            id = 'io.github.lukebemish.mcdevutils'
+            displayName = "${mod_name}"
+            description = 'TODO: write description'
+            implementationClass = 'io.github.lukebemish.mcdevutils.impl.gradle.MCDevUtilsPlugin'
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    source(project(":Api").sourceSets.main.allSource)
+}
+
+publishing {
+    repositories {
+        mavenLocal()
     }
 }

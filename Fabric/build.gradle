@@ -3,7 +3,25 @@ plugins {
     id 'maven-publish'
 }
 
-archivesBaseName = "${mod_name}-fabric-${minecraft_version}"
+loom {
+    remapArchives = false
+    setupRemappedVariants = false
+    enableTransitiveAccessWideners = false
+    runConfigs.configureEach {
+        ideConfigGenerated = false
+    }
+    interfaceInjection {
+        enableDependencyInterfaceInjection = false
+    }
+}
+
+jar {
+    classifier null
+    getDestinationDirectory().set(new File(project.getBuildDir(),"libs"))
+}
+
+remapJar.enabled = false
+remapSourcesJar.enabled = false
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -13,63 +31,28 @@ dependencies {
     }
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+
     implementation project(":Common")
+    implementation project(":Api")
 
     compileOnly group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
+    testCompileOnly group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
     annotationProcessor group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
 }
 
 loom {
     runs {
-        client {
-            client()
-            setConfigName("Fabric Client")
-            ideConfigGenerated(true)
-            runDir("run")
-        }
-        server {
-            server()
-            setConfigName("Fabric Server")
-            ideConfigGenerated(true)
-            runDir("run")
-        }
     }
 }
 
 
 processResources {
     from project(":Common").sourceSets.main.resources
+    from project(":Api").sourceSets.main.resources
     inputs.property "version", project.version
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
 }
 
 tasks.withType(JavaCompile) {
     source(project(":Common").sourceSets.main.allSource)
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${mod_name}" }
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.archivesBaseName
-            version project.version
-            from components.java
-        }
-    }
-
-    repositories {
-        maven {
-            url "file://" + System.getenv("local_maven")
-        }
-    }
+    source(project(":Api").sourceSets.main.allSource)
 }

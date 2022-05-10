@@ -1,0 +1,9 @@
+plugins {
+    id 'maven-publish'
+}
+
+archivesBaseName = "${project_id}_api_${minecraft_version}"
+dependencies {
+    compileOnly group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
+    annotationProcessor group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
+}
