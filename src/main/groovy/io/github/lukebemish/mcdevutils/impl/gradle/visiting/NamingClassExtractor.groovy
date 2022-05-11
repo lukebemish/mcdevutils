@@ -123,25 +123,43 @@ class NamingClassExtractor {
             //TODO: all of this
             node.instructions.forEach(insn -> {
                 if (insn instanceof FieldInsnNode) {
-
+                    dependencies.add(new Name(insn.owner).descriptor)
+                    String type = TypeSimplifier.simplifyType(insn.desc)
+                    if (type != null) {
+                        dependencies.add(new Name(type).descriptor)
+                    }
                 } else if (insn instanceof MethodInsnNode) {
-
+                    dependencies.add(new Name(insn.owner).descriptor)
+                    dependencies.add(new Name(insn.owner).descriptor+insn.name+insn.desc)
                 } else if (insn instanceof TypeInsnNode) {
-
+                    String type = TypeSimplifier.simplifyType(insn.desc)
+                    if (type != null) {
+                        dependencies.add(new Name(type).descriptor)
+                    }
                 }
             })
         }
         if (node.localVariables != null) {
             node.localVariables.forEach(local -> {
-
+                String type = TypeSimplifier.simplifyType(local.desc)
+                if (type != null) {
+                    dependencies.add(new Name(type).descriptor)
+                }
             })
         }
 
         for (Type type : Type.getArgumentTypes(node.desc)) {
-
+            String typeDesc = TypeSimplifier.simplifyType(type)
+            if (typeDesc != null) {
+                dependencies.add(new Name(typeDesc).descriptor)
+            }
         }
 
         var type = Type.getReturnType(node.desc)
+        String typeDesc = TypeSimplifier.simplifyType(type)
+        if (typeDesc != null) {
+            dependencies.add(new Name(typeDesc).descriptor)
+        }
 
 
         dependencyMap.putIfAbsent(methodDesc, new HashSet<String>())
@@ -185,14 +203,14 @@ class NamingClassExtractor {
                         if (!contains.stream().allMatch(s -> s instanceof BuiltinSide) || contains.size() == 0) {
                             HashSet<ISide> sides = checkElement(e, stack)
                             for (ISide side : original) {
-                                checkSingleSide(stack, side, sides)
+                                checkSingleSide(stack, side, sides, e)
                             }
                             out.addAll(sides)
                         }
                     } else {
                         HashSet<ISide> sides = checkElement(e, stack)
                         for (ISide side : original) {
-                            checkSingleSide(stack, side, sides)
+                            checkSingleSide(stack, side, sides, e)
                         }
                         out.addAll(sides)
                     }
@@ -201,7 +219,7 @@ class NamingClassExtractor {
                 for (String e : dependencies) {
                     HashSet<ISide> sides = checkElement(e, stack)
                     for (ISide side : original) {
-                        checkSingleSide(stack, side, sides)
+                        checkSingleSide(stack, side, sides, e)
                     }
                     out.addAll(sides)
                 }
@@ -223,11 +241,13 @@ class NamingClassExtractor {
         }
     }
 
-    private static void checkSingleSide(Collection<String> elements, ISide side, Collection<ISide> sides) {
+    private static void checkSingleSide(Collection<String> elements, ISide side, Collection<ISide> sides, String newElement) {
         try {
             side.canSafelyCall(sides);
         } catch (SideConflictException e) {
-            throw new ConflictDiscoveryException(elements, e)
+            ArrayList<String> stack = new ArrayList<>(elements)
+            stack.add(newElement)
+            throw new ConflictDiscoveryException(stack, e)
         }
     }
 }

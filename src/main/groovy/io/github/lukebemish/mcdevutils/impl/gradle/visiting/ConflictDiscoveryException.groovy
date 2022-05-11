@@ -9,7 +9,7 @@ class ConflictDiscoveryException extends RuntimeException {
     public final ISide s2;
 
     ConflictDiscoveryException(Collection<String> e, SideConflictException exception) {
-        super(String.format("Conflicting annotations %s referencing %s found while propagating: %s",exception.s1, exception.s2, String.join(", ", e)))
+        super(String.format("Conflicting annotations %s referencing %s found while propagating:\n    %s",exception.s1, exception.s2, String.join("\n    ", e)))
         this.e = e
         this.s1 = exception.s1
         this.s2 = exception.s2
