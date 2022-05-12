@@ -19,7 +19,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 @AutoService(IRegistrationWriter.class)
-public class ForgeRegistrationWriter implements IRegistrationWriter {
+public class QuiltRegistrationWriter implements IRegistrationWriter {
     @Override
     public void write(ProcessingEnvironment processingEnv, RoundEnvironment roundEnv, Types types, String className, TypeMirror registryType, List<? extends VariableElement> fields, String mod_id, VariableElement target) throws IOException {
         String packageName = null;
@@ -49,8 +49,7 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
 
             out.println("import "+typeQualifiedName+";");
             out.println("import net.minecraft.resources.ResourceLocation;");
-            out.println("import net.minecraftforge.event.RegistryEvent;");
-            out.println("import net.minecraftforge.eventbus.api.SubscribeEvent;");
+            out.println("import net.minecraft.core.Registry;");
             out.println();
 
             out.print("public class ");
@@ -58,8 +57,7 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
             out.println(" {");
             out.println();
 
-            out.println("    @SubscribeEvent");
-            out.println("    public static void init(RegistryEvent.Register<"+typeSimpleName+"> event) {");
+            out.println("    public static void init(Registry<"+typeSimpleName+"> registry) {");
             out.println(String.format("        %s holder = new %s();",simpleClassName,simpleClassName));
             out.println(String.format("        %s.%s = holder;",simpleClassName,target.getSimpleName()));
             out.println("        String mod_id = \""+mod_id+"\";");
@@ -75,8 +73,7 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                                         "Registrar.Named annotation.", variableElement);
                         return;
                     }
-                    out.println("        holder."+variableElement.getSimpleName()+".setRegistryName(new ResourceLocation(mod_id, \""+name.value()+"\"));");
-                    out.println("        event.getRegistry().register(holder."+variableElement.getSimpleName()+");");
+                    out.println("        Registry.register(registry, new ResourceLocation(mod_id, \""+name.value()+"\"), holder."+variableElement.getSimpleName()+");");
                 } else {
                     Registrar.Named name = variableElement.getAnnotation(Registrar.Named.class);
                     if (name!=null) {
@@ -110,12 +107,8 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                     types.getWildcardType(elementUtils.getTypeElement(String.class.getCanonicalName()).asType(),null),
                     types.getWildcardType(regType,null)))) {
                 // It's a map
-                ArrayList<String> out = new ArrayList<>();
-                out.add(String.format("%s%s.forEach((name%s, value%s) -> {",indent,varAccessor,index,index));
-                out.add(String.format("%s    value%s.setRegistryName(new ResourceLocation(mod_id, name%s));",indent,index,index));
-                out.add(String.format("%s    event.getRegistry().register(value%s);",indent,index));
-                out.add(String.format("%s});",indent));
-                return out;
+                return List.of(String.format("%s%s.forEach((name%s, value%s) -> " +
+                        "Registry.register(registry, new ResourceLocation(mod_id, name%s), value%s));",indent,varAccessor,index,index,index,index));
             } else if (types.isAssignable(declaredType, types.getDeclaredType(elementUtils.getTypeElement(Collection.class.getCanonicalName()),
                     types.getWildcardType(null,null)))) {
                 var executable = types.asMemberOf(declaredType, elementUtils.getTypeElement(Collection.class.getCanonicalName())
@@ -138,10 +131,8 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                     String stringKey = recordStuff.entrySet().stream().filter(t->types.isAssignable(t.getValue(), elementUtils.getTypeElement(String.class.getCanonicalName()).asType()))
                             .findFirst().get().getKey();
                     String regTypeKey = recordStuff.entrySet().stream().filter(t->types.isAssignable(t.getValue(), regType)).findFirst().get().getKey();
-                    ArrayList<String> out = new ArrayList<>();
-                    out.add(String.format("%s%s.%s().setRegistryName(new ResourceLocation(mod_id, %s.%s()));",indent,varAccessor,regTypeKey,varAccessor,stringKey));
-                    out.add(String.format("%sevent.getRegistry().register(%s.%s());",indent,varAccessor,regTypeKey));
-                    return out;
+                    return List.of(String.format("%sRegistry.register(registry, new ResourceLocation(mod_id, %s.%s()), %s.%s());",
+                            indent, varAccessor, stringKey, varAccessor, regTypeKey));
                 }
             }
             // I'll figure out other potential formats later

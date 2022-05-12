@@ -59,6 +59,8 @@ dependencies {
 	compileOnly group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
 	testCompileOnly group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
 	annotationProcessor group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
+
+	testAnnotationProcessor sourceSets.main.output
 }
 
 loom {
@@ -75,4 +77,14 @@ processResources {
 tasks.withType(JavaCompile) {
 	source(project(":Common").sourceSets.main.allSource)
 	source(project(":Api").sourceSets.main.allSource)
+}
+
+compileTestJava {
+	source(project(":Common").sourceSets.test.allSource)
+	source(project(":Api").sourceSets.test.allSource)
+}
+
+processTestResources {
+	from project(":Common").sourceSets.test.resources
+	from project(":Api").sourceSets.test.resources
 }
