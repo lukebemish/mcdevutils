@@ -3,21 +3,26 @@ package io.github.lukebemish.mcdevutils.registration.api;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE})
+@java.lang.annotation.Target({ElementType.TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface Registrar {
     Class<?> type();
+
+
     String mod_id();
 
-    @Target({ElementType.FIELD})
+    @java.lang.annotation.Target({ElementType.FIELD})
     @Retention(RetentionPolicy.SOURCE)
     @interface Named {
-        String path();
+        String value();
     }
 
-    @Target({ElementType.FIELD})
+    @java.lang.annotation.Target({ElementType.FIELD})
     @Retention(RetentionPolicy.SOURCE)
     @interface Exclude {}
+
+    @java.lang.annotation.Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface Target {}
 }
