@@ -11,7 +11,7 @@ public class TestModConfFeatures {
     @Registrar.Target
     public static TestModConfFeatures MOD_CONFIGURED_FEATURES;
 
-    @Registrar.Named("effect")
-    public ConfiguredFeature<NoneFeatureConfiguration, Feature<NoneFeatureConfiguration>> effect1 = new ConfiguredFeature<>(TestModFeatures.MOD_FEATURES.effect1, FeatureConfiguration.NONE);
+    @Registrar.Named("feature")
+    public ConfiguredFeature<NoneFeatureConfiguration, Feature<NoneFeatureConfiguration>> feature = new ConfiguredFeature<>(TestModFeatures.MOD_FEATURES.feature, FeatureConfiguration.NONE);
 }
 

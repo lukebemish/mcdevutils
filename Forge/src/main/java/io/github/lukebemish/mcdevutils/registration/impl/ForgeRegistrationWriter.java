@@ -69,7 +69,7 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                 out.println();
 
                 out.println("    @SubscribeEvent");
-                out.println("    public static void init(RegistryEvent.Register<" + parameterizedSimpleType + "> event) {");
+                out.println("    public void init(RegistryEvent.Register<" + parameterizedSimpleType + "> event) {");
                 out.println(String.format("        %s holder = new %s();", simpleClassName, simpleClassName));
                 out.println(String.format("        %s.%s = holder;", simpleClassName, target.getSimpleName()));
                 out.println("        String mod_id = \"" + mod_id + "\";");
@@ -110,11 +110,16 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                 out.println("    }");
                 out.println("}");
             } else {
+                VariableElement knownRegistry = RegistryLocator.locate(processingEnv, types, registryType);
+
                 out.println("import "+typeQualifiedName+";");
                 out.println("import net.minecraft.resources.ResourceLocation;");
                 out.println("import net.minecraft.core.Registry;");
                 out.println("import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;");
                 out.println("import net.minecraftforge.eventbus.api.SubscribeEvent;");
+                if (knownRegistry != null) {
+                    out.println("import "+((TypeElement)knownRegistry.getEnclosingElement()).getQualifiedName()+";");
+                }
                 out.println();
 
                 out.print("public class ");
@@ -122,20 +127,32 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                 out.println(" {");
                 out.println();
 
-                out.println("    private Registry<"+parameterizedSimpleType+"> registry;");
+                if (knownRegistry != null) {
+                    out.println("    private static Registry<"+parameterizedSimpleType+"> registry = "
+                            +knownRegistry.getEnclosingElement().getSimpleName()+"."+knownRegistry.getSimpleName()+";");
+                } else {
+                    out.println("    private static Registry<"+parameterizedSimpleType+"> registry;");
+                }
 
-                out.println("    public "+registrarSimpleClassName+"(Registry<"+parameterizedSimpleType+"> registry) {");
-                out.println("        this.registry = registry;");
+                out.println();
+
+                if (knownRegistry != null) {
+                    out.println("    public "+registrarSimpleClassName+"() {");
+                }
+                else{
+                    out.println("    public "+registrarSimpleClassName+"(Registry<"+parameterizedSimpleType+"> registryGiven) {");
+                    out.println("        registry = registryGiven;");
+                }
                 out.println("    }");
                 out.println();
 
                 out.println("    @SubscribeEvent");
                 out.println("    public void listen(FMLCommonSetupEvent event) {");
-                out.println("        event.enqueueWork(() -> { this.init(); });");
+                out.println("        event.enqueueWork(() -> { init(); });");
                 out.println("    }");
                 out.println();
 
-                out.println("    private void init() {");
+                out.println("    public static void init() {");
                 out.println(String.format("        %s holder = new %s();",simpleClassName,simpleClassName));
                 out.println(String.format("        %s.%s = holder;",simpleClassName,target.getSimpleName()));
                 out.println("        String mod_id = \""+mod_id+"\";");
