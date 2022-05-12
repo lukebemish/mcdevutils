@@ -13,7 +13,7 @@ In each gradle project that you want the plugin applied to (if using the MultiLo
 
 ```gradle
 mcDevUtil {
-    platform '<platform>'
+    platform = '<platform>'
 }
 ```
 
