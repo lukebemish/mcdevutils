@@ -1,6 +1,6 @@
 # MC Dev Utils
 
-A general-purpose annotation processor and gradle plugin aimed at ease of development in multiplatform Minecraft mods.
+A general-purpose annotation processor and gradle plugin aimed at ease of development in multi-loader Minecraft mods.
 
 ## How it works
 

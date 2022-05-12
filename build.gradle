@@ -4,6 +4,7 @@ plugins {
     id 'java'
     id 'groovy'
     id 'maven-publish'
+    id "com.gradle.plugin-publish" version "1.0.0-rc-1"
 }
 
 subprojects {
@@ -125,7 +126,7 @@ gradlePlugin {
         mcdevAnnotations {
             id = 'io.github.lukebemish.mcdevutils'
             displayName = "${mod_name}"
-            description = 'TODO: write description'
+            description = 'A general-purpose annotation processor and gradle plugin aimed at ease of development in multi-loader Minecraft mods.'
             implementationClass = 'io.github.lukebemish.mcdevutils.impl.gradle.MCDevUtilsPlugin'
         }
     }
@@ -133,6 +134,12 @@ gradlePlugin {
 
 tasks.withType(JavaCompile) {
     source(project(":Api").sourceSets.main.allSource)
+}
+
+pluginBundle {
+    website = 'https://github.com/lukebemish/mcdevutils'
+    vcsUrl = 'https://github.com/lukebemish/mcdevutils'
+    tags = ['minecraft', 'forge', 'fabric', 'multiloader']
 }
 
 publishing {
