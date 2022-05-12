@@ -1,4 +1,4 @@
-package io.github.lukebemish.mcdevutils.sidedimpl;
+package io.github.lukebemish.mcdevutils.sided.impl;
 
 import io.github.lukebemish.mcdevutils.api.Suppress;
 import com.google.auto.service.AutoService;
