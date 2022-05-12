@@ -43,15 +43,11 @@ class MCDevUtilsPlugin implements Plugin<Project> {
         }
 
         project.pluginManager.withPlugin("java") {
-            var task = project.tasks.register('verifySidesTask', SidedCheckerTask) {
+            var task = project.tasks.register('verifySidedCode', SidedCheckerTask) {
                 setGroup('Verification')
                 setDescription('Analyze project for client/server side constrained code issues.')
                 sources = javaPluginExtension.sourceSets.getByName('main')
                 dependsOn('classes')
-            }
-
-            project.tasks.named('check').configure {
-                dependsOn task
             }
         }
     }

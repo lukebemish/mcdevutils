@@ -25,11 +25,11 @@ public class OnlyInErrorProcessor extends AbstractProcessor {
                 Suppress suppression = e.getAnnotation(Suppress.class);
                 if (environment!=null) {
                     processingEnv.getMessager().printMessage(
-                            (suppression==null || !suppression.value().equals(Suppress.SIDED_REMOVAL_ERROR_SUPPRESSION))?
+                            (suppression==null || !suppression.value().equals(Suppress.INTERNAL_SIDED_ANNOTATION))?
                                     Diagnostic.Kind.ERROR:Diagnostic.Kind.WARNING,
                             String.format("Detected use of @%s, which is highly inadvisable. If you have no other " +
                                     "option, you can suppress the error using @%s(\"%s\").",OnlyIn.class.getSimpleName(),
-                                    Suppress.class.getSimpleName(), Suppress.SIDED_REMOVAL_ERROR_SUPPRESSION), e);
+                                    Suppress.class.getSimpleName(), Suppress.INTERNAL_SIDED_ANNOTATION), e);
                     return false;
                 }
             }

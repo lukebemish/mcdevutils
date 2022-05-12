@@ -67,6 +67,14 @@ subprojects {
     tasks.withType(GenerateModuleMetadata) {
         enabled = false
     }
+
+    dependencies {
+        implementation 'org.jetbrains:annotations:23.0.0'
+    }
+}
+
+dependencies {
+    implementation 'org.jetbrains:annotations:23.0.0'
 }
 
 repositories {
