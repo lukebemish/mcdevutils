@@ -39,6 +39,13 @@ public class QuiltRegistrationWriter implements IRegistrationWriter {
         String typeQualifiedName = String.valueOf(((TypeElement)((DeclaredType)registryType).asElement()).getQualifiedName());
         String typeSimpleName = String.valueOf(((DeclaredType)registryType).asElement().getSimpleName());
 
+        //Figure out parameters:
+        int param_count = ((TypeElement)((DeclaredType)registryType).asElement()).getTypeParameters().size();
+        String parameterizedSimpleType = typeSimpleName;
+        if (param_count > 0) {
+            parameterizedSimpleType+="<"+String.join(",",Arrays.stream(new Object[param_count]).map(m->"?").toList())+">";
+        }
+
         try (PrintWriter out = new PrintWriter(registrarFile.openWriter())) {
             if (packageName != null) {
                 out.print("package ");
@@ -57,7 +64,7 @@ public class QuiltRegistrationWriter implements IRegistrationWriter {
             out.println(" {");
             out.println();
 
-            out.println("    public static void init(Registry<"+typeSimpleName+"> registry) {");
+            out.println("    public static void init(Registry<"+parameterizedSimpleType+"> registry) {");
             out.println(String.format("        %s holder = new %s();",simpleClassName,simpleClassName));
             out.println(String.format("        %s.%s = holder;",simpleClassName,target.getSimpleName()));
             out.println("        String mod_id = \""+mod_id+"\";");

@@ -37,6 +37,8 @@ dependencies {
     annotationProcessor group:'com.google.auto.service', name:'auto-service', version:'1.0.1'
 
     testAnnotationProcessor sourceSets.main.output
+    testCompileOnly project(":Common")
+    testCompileOnly project(":Api")
 }
 
 tasks.withType(JavaCompile) {

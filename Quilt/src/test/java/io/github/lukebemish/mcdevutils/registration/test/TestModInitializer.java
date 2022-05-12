@@ -8,6 +8,6 @@ public class TestModInitializer implements ModInitializer {
     @Override
     public void onInitialize(ModContainer container) {
         TestModItemsRegistrar.init(Registry.ITEM);
-        TestModItems items = TestModItems.MOD_ITEMS;
+        TestModFeaturesRegistrar.init(Registry.FEATURE);
     }
 }
