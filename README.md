@@ -6,7 +6,15 @@ A general-purpose annotation processor and gradle plugin aimed at ease of develo
 
 ## Installing and Configuring
 
-TODO
+Add the following plugin to your project(s):
+
+```gradle
+plugins {
+  id "io.github.lukebemish.mcdevutils" version "<version>"
+}
+```
+
+Check the available versions at [https://plugins.gradle.org/plugin/io.github.lukebemish.mcdevutils](https://plugins.gradle.org/plugin/io.github.lukebemish.mcdevutils)
 
 In each gradle project that you want the plugin applied to (if using the MultiLoader Template, this will be the `Common`,
 `Forge`, `Fabric`, and `Quilt` projects), add the following to your buildscript:
