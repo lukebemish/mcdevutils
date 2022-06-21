@@ -4,7 +4,7 @@ plugins {
     id 'java'
     id 'groovy'
     id 'maven-publish'
-    id "com.gradle.plugin-publish" version "1.0.0-rc-1"
+    id "com.gradle.plugin-publish" version "1.0.0-rc-3"
 }
 
 subprojects {
@@ -120,6 +120,25 @@ def bundleStuff() {
     return outPath
 }
 
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+
+jar {
+    final var actualDateTime = OffsetDateTime.now(ZoneOffset.UTC).withNano(0)
+    final var currentDateTime = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(actualDateTime)
+    manifest.attributes([
+            'Maven-Artifact'          : "${project.group}:${archivesBaseName}:${project.version}",
+            'Specification-Title'     : archivesBaseName,
+            'Specification-Vendor'    : 'Luke Bemish',
+            'Specification-Version'   : '1',
+            'Implementation-Title'    : archivesBaseName,
+            'Implementation-Version'  : "${project.version}",
+            'Implementation-Vendor'   : 'Luke Bemish',
+            'Implementation-Timestamp': currentDateTime,
+            'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+    ])
+}
 
 gradlePlugin {
     plugins {
