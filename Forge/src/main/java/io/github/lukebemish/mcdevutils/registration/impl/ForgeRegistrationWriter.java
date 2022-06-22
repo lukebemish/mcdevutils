@@ -56,186 +56,70 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                 out.println();
             }
 
-            if (types.isAssignable(registryType, types.getDeclaredType(processingEnv.getElementUtils().getTypeElement("net.minecraftforge.registries.IForgeRegistryEntry"), registryType))) {
-                out.println("import "+typeQualifiedName+";");
-                out.println("import net.minecraft.resources.ResourceLocation;");
-                out.println("import net.minecraftforge.event.RegistryEvent;");
-                out.println("import net.minecraftforge.eventbus.api.SubscribeEvent;");
-                out.println();
+            out.println("import "+typeQualifiedName+";");
+            out.println("import net.minecraft.resources.ResourceLocation;");
+            out.println("import net.minecraftforge.registries.RegisterEvent;");
+            out.println("import net.minecraftforge.eventbus.api.SubscribeEvent;");
+            out.println("import net.minecraft.resources.ResourceKey;");
+            out.println("import net.minecraft.core.Registry;");
+            out.println();
 
-                out.print("public class ");
-                out.print(registrarSimpleClassName);
-                out.println(" {");
-                out.println();
+            out.print("public class ");
+            out.print(registrarSimpleClassName);
+            out.println(" {");
+            out.println();
 
-                out.println("    @SubscribeEvent");
-                out.println("    public void init(RegistryEvent.Register<" + parameterizedSimpleType + "> event) {");
-                out.println(String.format("        %s holder = new %s();", simpleClassName, simpleClassName));
-                out.println(String.format("        %s.%s = holder;", simpleClassName, target.getSimpleName()));
-                out.println("        String mod_id = \"" + mod_id + "\";");
-                out.println();
+            out.println(String.format("    private final ResourceKey<? extends Registry<%s>> key;",parameterizedSimpleType));
+            out.println();
 
-                for (VariableElement variableElement : fields) {
-                    TypeMirror fieldType = variableElement.asType();
-                    if (types.isAssignable(fieldType, registryType)) {
-                        Registrar.Named name = variableElement.getAnnotation(Registrar.Named.class);
-                        if (name == null || name.value() == null) {
-                            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                                    "Registrar fields of the registry type must have a @" +
-                                            "Registrar.Named annotation.", variableElement);
-                            return;
-                        }
-                        out.println("        holder." + variableElement.getSimpleName() + ".setRegistryName(new ResourceLocation(mod_id, \"" + name.value() + "\"));");
-                        out.println("        event.getRegistry().register(holder." + variableElement.getSimpleName() + ");");
-                    } else {
-                        Registrar.Named name = variableElement.getAnnotation(Registrar.Named.class);
-                        if (name != null) {
-                            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                                    "Registrar fields not of the registry type may not have a @" +
-                                            "Registrar.Named annotation.", variableElement);
-                            return;
-                        }
-                        try {
-                            List<String> toWrite = writeForField(processingEnv, types, variableElement.asType(), "holder." + variableElement.getSimpleName(), 2, registryType);
-                            toWrite.forEach(out::println);
-                        } catch (Throwable thr) {
-                            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                                    "Registrar field had unknown type.", variableElement);
-                            return;
-                        }
+            out.println("    public "+registrarSimpleClassName+"(ResourceKey<? extends Registry<"+parameterizedSimpleType+">> key) {");
+            out.println("        this.key = key;");
+            out.println("    }");
+            out.println();
+
+            out.println("    @SubscribeEvent");
+            out.println("    public void init(RegisterEvent event) {");
+            out.println("        event.register(this.key, registry -> {");
+            out.println(String.format("            %s holder = new %s();", simpleClassName, simpleClassName));
+            out.println(String.format("            %s.%s = holder;", simpleClassName, target.getSimpleName()));
+            out.println("            String mod_id = \"" + mod_id + "\";");
+            out.println();
+
+            for (VariableElement variableElement : fields) {
+                TypeMirror fieldType = variableElement.asType();
+                if (types.isAssignable(fieldType,registryType)) {
+                    Registrar.Named name = variableElement.getAnnotation(Registrar.Named.class);
+                    if (name==null || name.value()==null) {
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                                "Registrar fields of the registry type must have a @"+
+                                        "Registrar.Named annotation.", variableElement);
+                        return;
                     }
-                }
-
-
-                out.println("    }");
-                out.println("}");
-            } else {
-                VariableElement knownRegistry = RegistryLocator.locate(processingEnv, types, registryType);
-
-                out.println("import "+typeQualifiedName+";");
-                out.println("import net.minecraft.resources.ResourceLocation;");
-                out.println("import net.minecraft.core.Registry;");
-                out.println("import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;");
-                out.println("import net.minecraftforge.eventbus.api.SubscribeEvent;");
-                if (knownRegistry != null) {
-                    out.println("import "+((TypeElement)knownRegistry.getEnclosingElement()).getQualifiedName()+";");
-                }
-                out.println();
-
-                out.print("public class ");
-                out.print(registrarSimpleClassName);
-                out.println(" {");
-                out.println();
-
-                if (knownRegistry != null) {
-                    out.println("    private static Registry<"+parameterizedSimpleType+"> registry = "
-                            +knownRegistry.getEnclosingElement().getSimpleName()+"."+knownRegistry.getSimpleName()+";");
+                    out.println("        registry.register(new ResourceLocation(mod_id, \""+name.value()+"\"), holder."+variableElement.getSimpleName()+");");
                 } else {
-                    out.println("    private static Registry<"+parameterizedSimpleType+"> registry;");
-                }
-
-                out.println();
-
-                if (knownRegistry != null) {
-                    out.println("    public "+registrarSimpleClassName+"() {");
-                }
-                else{
-                    out.println("    public "+registrarSimpleClassName+"(Registry<"+parameterizedSimpleType+"> registryGiven) {");
-                    out.println("        registry = registryGiven;");
-                }
-                out.println("    }");
-                out.println();
-
-                out.println("    @SubscribeEvent");
-                out.println("    public void listen(FMLCommonSetupEvent event) {");
-                out.println("        event.enqueueWork(() -> { init(); });");
-                out.println("    }");
-                out.println();
-
-                out.println("    public static void init() {");
-                out.println(String.format("        %s holder = new %s();",simpleClassName,simpleClassName));
-                out.println(String.format("        %s.%s = holder;",simpleClassName,target.getSimpleName()));
-                out.println("        String mod_id = \""+mod_id+"\";");
-                out.println();
-
-                for (VariableElement variableElement : fields) {
-                    TypeMirror fieldType = variableElement.asType();
-                    if (types.isAssignable(fieldType,registryType)) {
-                        Registrar.Named name = variableElement.getAnnotation(Registrar.Named.class);
-                        if (name==null || name.value()==null) {
-                            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                                    "Registrar fields of the registry type must have a @"+
-                                            "Registrar.Named annotation.", variableElement);
-                            return;
-                        }
-                        out.println("        Registry.register(registry, new ResourceLocation(mod_id, \""+name.value()+"\"), holder."+variableElement.getSimpleName()+");");
-                    } else {
-                        Registrar.Named name = variableElement.getAnnotation(Registrar.Named.class);
-                        if (name!=null) {
-                            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                                    "Registrar fields not of the registry type may not have a @"+
-                                            "Registrar.Named annotation.", variableElement);
-                            return;
-                        }
-                        try {
-                            List<String> toWrite = writeForFieldVanilla(processingEnv, types, variableElement.asType(), "holder." + variableElement.getSimpleName(), 2, registryType);
-                            toWrite.forEach(out::println);
-                        } catch (Throwable thr) {
-                            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                                    "Registrar field had unknown type.", variableElement);
-                            return;
-                        }
+                    Registrar.Named name = variableElement.getAnnotation(Registrar.Named.class);
+                    if (name!=null) {
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                                "Registrar fields not of the registry type may not have a @"+
+                                        "Registrar.Named annotation.", variableElement);
+                        return;
+                    }
+                    try {
+                        List<String> toWrite = writeForField(processingEnv, types, variableElement.asType(), "holder." + variableElement.getSimpleName(), 2, registryType);
+                        toWrite.forEach(out::println);
+                    } catch (Throwable thr) {
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                                "Registrar field had unknown type.", variableElement);
+                        return;
                     }
                 }
-
-
-                out.println("    }");
-                out.println("}");
             }
+
+
+            out.println("        });");
+            out.println("    }");
+            out.println("}");
         }
-    }
-
-    private List<String> writeForFieldVanilla(ProcessingEnvironment processingEnv, Types types, TypeMirror type, String varAccessor, int index, TypeMirror regType) throws IllegalArgumentException {
-        String indent = new String(new char[index]).replace("\0", "    ");
-        var elementUtils = processingEnv.getElementUtils();
-        if (type instanceof DeclaredType declaredType) {
-            if (types.isAssignable(declaredType, types.getDeclaredType(elementUtils.getTypeElement(Map.class.getCanonicalName()),
-                    types.getWildcardType(elementUtils.getTypeElement(String.class.getCanonicalName()).asType(),null),
-                    types.getWildcardType(regType,null)))) {
-                // It's a map
-                return List.of(String.format("%s%s.forEach((name%s, value%s) -> " +
-                        "Registry.register(registry, new ResourceLocation(mod_id, name%s), value%s));",indent,varAccessor,index,index,index,index));
-            } else if (types.isAssignable(declaredType, types.getDeclaredType(elementUtils.getTypeElement(Collection.class.getCanonicalName()),
-                    types.getWildcardType(null,null)))) {
-                var executable = types.asMemberOf(declaredType, elementUtils.getTypeElement(Collection.class.getCanonicalName())
-                        .getEnclosedElements().stream().filter(element -> element instanceof ExecutableElement)
-                        .filter(element -> String.valueOf(element.getSimpleName()).equals("add")).findFirst().orElseThrow(IllegalArgumentException::new));
-
-                var newType = ((ExecutableType)executable).getParameterTypes().get(0);
-                ArrayList<String> lines = new ArrayList<>();
-                lines.add(String.format("%s%s.forEach(e%s -> {",indent,varAccessor,index));
-
-                lines.addAll(writeForField(processingEnv, types, newType, "e"+index, index+1, regType));
-
-                lines.add(String.format("%s});",indent));
-                return lines;
-            } else {
-                Map<String, TypeMirror> recordStuff = parseRecord(types, declaredType);
-                if (recordStuff != null && recordStuff.size() == 2
-                        && recordStuff.values().stream().anyMatch(t->types.isAssignable(t, elementUtils.getTypeElement(String.class.getCanonicalName()).asType()))
-                        && recordStuff.values().stream().anyMatch(t->types.isAssignable(t, regType))) {
-                    String stringKey = recordStuff.entrySet().stream().filter(t->types.isAssignable(t.getValue(), elementUtils.getTypeElement(String.class.getCanonicalName()).asType()))
-                            .findFirst().get().getKey();
-                    String regTypeKey = recordStuff.entrySet().stream().filter(t->types.isAssignable(t.getValue(), regType)).findFirst().get().getKey();
-                    return List.of(String.format("%sRegistry.register(registry, new ResourceLocation(mod_id, %s.%s()), %s.%s());",
-                            indent, varAccessor, stringKey, varAccessor, regTypeKey));
-                }
-            }
-            // I'll figure out other potential formats later
-        }
-        System.out.println(type);
-        System.out.println(processingEnv.getElementUtils().getTypeElement(Map.class.getCanonicalName()).asType());
-        throw new IllegalArgumentException();
     }
 
     private List<String> writeForField(ProcessingEnvironment processingEnv, Types types, TypeMirror type, String varAccessor, int index, TypeMirror regType) throws IllegalArgumentException {
@@ -246,12 +130,8 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                     types.getWildcardType(elementUtils.getTypeElement(String.class.getCanonicalName()).asType(),null),
                     types.getWildcardType(regType,null)))) {
                 // It's a map
-                ArrayList<String> out = new ArrayList<>();
-                out.add(String.format("%s%s.forEach((name%s, value%s) -> {",indent,varAccessor,index,index));
-                out.add(String.format("%s    value%s.setRegistryName(new ResourceLocation(mod_id, name%s));",indent,index,index));
-                out.add(String.format("%s    event.getRegistry().register(value%s);",indent,index));
-                out.add(String.format("%s});",indent));
-                return out;
+                return List.of(String.format("%s%s.forEach((name%s, value%s) -> " +
+                        "registry.register(new ResourceLocation(mod_id, name%s), value%s));",indent,varAccessor,index,index,index,index));
             } else if (types.isAssignable(declaredType, types.getDeclaredType(elementUtils.getTypeElement(Collection.class.getCanonicalName()),
                     types.getWildcardType(null,null)))) {
                 var executable = types.asMemberOf(declaredType, elementUtils.getTypeElement(Collection.class.getCanonicalName())
@@ -274,10 +154,8 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                     String stringKey = recordStuff.entrySet().stream().filter(t->types.isAssignable(t.getValue(), elementUtils.getTypeElement(String.class.getCanonicalName()).asType()))
                             .findFirst().get().getKey();
                     String regTypeKey = recordStuff.entrySet().stream().filter(t->types.isAssignable(t.getValue(), regType)).findFirst().get().getKey();
-                    ArrayList<String> out = new ArrayList<>();
-                    out.add(String.format("%s%s.%s().setRegistryName(new ResourceLocation(mod_id, %s.%s()));",indent,varAccessor,regTypeKey,varAccessor,stringKey));
-                    out.add(String.format("%sevent.getRegistry().register(%s.%s());",indent,varAccessor,regTypeKey));
-                    return out;
+                    return List.of(String.format("%sregistry.register(new ResourceLocation(mod_id, %s.%s()), %s.%s());",
+                            indent, varAccessor, stringKey, varAccessor, regTypeKey));
                 }
             }
             // I'll figure out other potential formats later

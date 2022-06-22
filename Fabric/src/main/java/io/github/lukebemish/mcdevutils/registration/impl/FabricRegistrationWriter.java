@@ -46,8 +46,6 @@ public class FabricRegistrationWriter implements IRegistrationWriter {
             parameterizedSimpleType+="<"+String.join(",",Arrays.stream(new Object[param_count]).map(m->"?").toList())+">";
         }
 
-        VariableElement knownRegistry = RegistryLocator.locate(processingEnv, types, registryType);
-
         try (PrintWriter out = new PrintWriter(registrarFile.openWriter())) {
             if (packageName != null) {
                 out.print("package ");
@@ -59,9 +57,6 @@ public class FabricRegistrationWriter implements IRegistrationWriter {
             out.println("import "+typeQualifiedName+";");
             out.println("import net.minecraft.resources.ResourceLocation;");
             out.println("import net.minecraft.core.Registry;");
-            if (knownRegistry != null) {
-                out.println("import "+((TypeElement)knownRegistry.getEnclosingElement()).getQualifiedName()+";");
-            }
             out.println();
 
             out.print("public class ");
@@ -69,14 +64,7 @@ public class FabricRegistrationWriter implements IRegistrationWriter {
             out.println(" {");
             out.println();
 
-            if (knownRegistry != null) {
-                out.println("    public static void init() {");
-                out.println("        Registry<"+parameterizedSimpleType+"> registry = "
-                        +knownRegistry.getEnclosingElement().getSimpleName()+"."+knownRegistry.getSimpleName()+";");
-            }
-            else{
-                out.println("    public static void init(Registry<" + parameterizedSimpleType + "> registry) {");
-            }
+            out.println("    public static void init(Registry<" + parameterizedSimpleType + "> registry) {");
             out.println(String.format("        %s holder = new %s();",simpleClassName,simpleClassName));
             out.println(String.format("        %s.%s = holder;",simpleClassName,target.getSimpleName()));
             out.println("        String mod_id = \""+mod_id+"\";");
