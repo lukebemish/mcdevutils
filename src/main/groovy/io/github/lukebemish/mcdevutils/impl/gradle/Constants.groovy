@@ -1,6 +1,6 @@
-package io.github.lukebemish.mcdevutils.impl.gradle;
+package io.github.lukebemish.mcdevutils.impl.gradle
 
-import io.github.lukebemish.mcdevutils.sided.api.CheckSide;
+import io.github.lukebemish.mcdevutils.sided.api.CheckSide
 
 class Constants {
     static final Name ONLYIN_PATH = new Name("net.minecraftforge.api.distmarker.OnlyIn")
@@ -9,5 +9,5 @@ class Constants {
 
 
     public static final String CACHE_FOLDER = "mcdevutil"
-    public static final String VERSION = "0.1.0"
+    public static final String VERSION = Constants.class.package.implementationVersion
 }
