@@ -12,7 +12,7 @@ In each gradle project that you want the plugin applied to (if using the MultiLo
 `Forge`, `Fabric`, and `Quilt` projects), add the following to your buildscript:
 
 ```gradle
-mcDevUtil {
+mcDevUtils {
     platform = '<platform>'
 }
 ```
