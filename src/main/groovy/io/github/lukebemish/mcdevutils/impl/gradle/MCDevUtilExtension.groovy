@@ -3,7 +3,7 @@ package io.github.lukebemish.mcdevutils.impl.gradle
 import org.gradle.api.provider.Property
 
 abstract class MCDevUtilExtension extends GroovyObjectSupport {
-    public static final String NAME = "mcDevUtil";
+    public static final String NAME = "mcDevUtils";
     abstract Property<String> getPlatform()
 
     MCDevUtilExtension() {

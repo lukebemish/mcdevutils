@@ -80,6 +80,12 @@ dependencies {
 
 repositories {
     mavenCentral()
+    maven { url = 'https://maven.minecraftforge.net' }
+    maven { url = 'https://maven.parchmentmc.org' }
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
 }
 
 configurations {
@@ -89,6 +95,9 @@ configurations {
     }
     bundle
     implementation.extendsFrom(bundle)
+
+    forgegradle
+    compileOnly.extendsFrom forgegradle
 }
 
 dependencies {
@@ -99,6 +108,17 @@ dependencies {
     bundledJars(project(path: ":Fabric", configuration: "instrumentedJars")) { transitive false }
     bundledJars(project(path: ":Forge", configuration: "instrumentedJars")) { transitive false }
     bundledJars(project(path: ":Quilt", configuration: "instrumentedJars")) { transitive false }
+
+    // FG stuff
+    forgegradle 'net.minecraftforge.gradle:ForgeGradle:5.1.+'
+    forgegradle 'net.minecraftforge:artifactural:3.0.8'
+    forgegradle 'net.minecraftforge:srgutils:0.4.3'
+    forgegradle 'com.google.guava:guava:30.1-jre'
+    forgegradle 'com.google.code.gson:gson:2.8.7'
+    forgegradle 'de.siegmar:fastcsv:2.0.0'
+
+    // Remapping
+    implementation "net.fabricmc:tiny-remapper:${project.tiny_remapper_version}"
 }
 
 processResources {

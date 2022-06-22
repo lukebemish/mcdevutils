@@ -1,6 +1,7 @@
 package io.github.lukebemish.mcdevutils.impl.gradle
 
-
+import io.github.lukebemish.mcdevutils.impl.gradle.forgegradle.FGCompatMCDevUtilExtension
+import io.github.lukebemish.mcdevutils.impl.gradle.forgegradle.ForgeGradleCompatEntrypoint
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.DependencyResolutionListener
@@ -10,9 +11,14 @@ import org.gradle.api.plugins.JavaPluginExtension
 class MCDevUtilsPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
-        JavaPluginExtension javaPluginExtension = (JavaPluginExtension)project.getExtensions().getByType(JavaPluginExtension.class)
-
-        final var ext = project.getExtensions().create(MCDevUtilExtension.NAME, MCDevUtilExtension.class)
+        MCDevUtilExtension ext1
+        if (project.pluginManager.hasPlugin('net.minecraftforge.gradle')) {
+            ext1 = project.getExtensions().create(MCDevUtilExtension.NAME, FGCompatMCDevUtilExtension.class)
+            ForgeGradleCompatEntrypoint.enter(project, ext1)
+        } else {
+            ext1 = project.getExtensions().create(MCDevUtilExtension.NAME, MCDevUtilExtension.class)
+        }
+        final var ext = ext1
         final var injection = new DependencyInjection(project, ext)
 
         project.afterEvaluate {
@@ -44,6 +50,7 @@ class MCDevUtilsPlugin implements Plugin<Project> {
 
         project.pluginManager.withPlugin("java") {
             var task = project.tasks.register('verifySidedCode', SidedCheckerTask) {
+                JavaPluginExtension javaPluginExtension = (JavaPluginExtension)project.getExtensions().getByType(JavaPluginExtension.class)
                 setGroup('Verification')
                 setDescription('Analyze project for client/server side constrained code issues.')
                 sources = javaPluginExtension.sourceSets.getByName('main')
