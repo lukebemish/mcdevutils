@@ -95,7 +95,7 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                                         "Registrar.Named annotation.", variableElement);
                         return;
                     }
-                    out.println("        registry.register(new ResourceLocation(mod_id, \""+name.value()+"\"), holder."+variableElement.getSimpleName()+");");
+                    out.println("            registry.register(new ResourceLocation(mod_id, \""+name.value()+"\"), holder."+variableElement.getSimpleName()+");");
                 } else {
                     Registrar.Named name = variableElement.getAnnotation(Registrar.Named.class);
                     if (name!=null) {
@@ -105,7 +105,7 @@ public class ForgeRegistrationWriter implements IRegistrationWriter {
                         return;
                     }
                     try {
-                        List<String> toWrite = writeForField(processingEnv, types, variableElement.asType(), "holder." + variableElement.getSimpleName(), 2, registryType);
+                        List<String> toWrite = writeForField(processingEnv, types, variableElement.asType(), "holder." + variableElement.getSimpleName(), 3, registryType);
                         toWrite.forEach(out::println);
                     } catch (Throwable thr) {
                         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
