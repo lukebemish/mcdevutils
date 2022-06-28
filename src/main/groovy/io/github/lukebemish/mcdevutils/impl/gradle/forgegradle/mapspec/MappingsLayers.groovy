@@ -14,11 +14,19 @@ class MappingsLayers {
         return this
     }
 
+    MappingsLayers builtin(String channel, String version) {
+        return addInitialLayer(new BuiltinMapSpec(channel, version))
+    }
+
     MappingsLayers parchment(String version) {
-        return addInitialLayer(new ParchmentMapSpec(version))
+        return addInitialLayer(new BuiltinMapSpec("channel", version))
     }
 
     MappingsLayers official(String version) {
-        return addInitialLayer(new OfficialMapSpec(version))
+        return addInitialLayer(new BuiltinMapSpec("official", version))
+    }
+
+    MappingsLayers intermediary(String version) {
+        return addInitialLayer(new IntermediaryMapSpec(version))
     }
 }

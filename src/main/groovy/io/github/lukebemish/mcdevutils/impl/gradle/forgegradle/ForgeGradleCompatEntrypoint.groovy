@@ -10,7 +10,7 @@ class ForgeGradleCompatEntrypoint {
         if (channelProviders == null)
             throw new IllegalStateException("For ForgeGradle compatibility, the MCDevUtils plugin must be applied after the ForgeGradle one. ")
 
-        TinyRemapperChannelProvider channelProvider = new TinyRemapperChannelProvider(extension)
+        LayeredChannelProvider channelProvider = new LayeredChannelProvider(extension)
         channelProviders.addProvider(channelProvider)
     }
 }

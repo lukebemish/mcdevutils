@@ -6,11 +6,11 @@ import net.minecraftforge.gradle.mcp.ChannelProvider
 import net.minecraftforge.gradle.mcp.MCPRepo
 import org.gradle.api.Project
 
-class TinyRemapperChannelProvider implements ChannelProvider {
+class LayeredChannelProvider implements ChannelProvider {
 
     final FGCompatMCDevUtilExtension extension
 
-    TinyRemapperChannelProvider(FGCompatMCDevUtilExtension extension) {
+    LayeredChannelProvider(FGCompatMCDevUtilExtension extension) {
         this.extension = extension
     }
 

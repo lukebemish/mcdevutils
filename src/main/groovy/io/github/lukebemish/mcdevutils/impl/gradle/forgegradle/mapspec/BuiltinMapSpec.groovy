@@ -5,11 +5,13 @@ import net.minecraftforge.gradle.mcp.ChannelProvidersExtension
 import net.minecraftforge.gradle.mcp.MCPRepo
 import org.gradle.api.Project
 
-class OfficialMapSpec implements InitialMapSpec {
+class BuiltinMapSpec implements InitialMapSpec {
 
-    final String version;
+    final String version
+    final String channel
 
-    OfficialMapSpec(String version) {
+    BuiltinMapSpec(String channel, String version) {
+        this.channel = channel
         this.version = version;
     }
 
@@ -17,11 +19,11 @@ class OfficialMapSpec implements InitialMapSpec {
     File getMappingsFile(MCPRepo mcpRepo, Project project) throws IOException {
         ChannelProvidersExtension channelProviders = project.getExtensions().findByType(ChannelProvidersExtension.class)
         if (channelProviders != null) {
-            ChannelProvider official = channelProviders.getProvider("official")
+            ChannelProvider official = channelProviders.getProvider(channel)
             if (official != null) {
-                return official.getMappingsFile(mcpRepo, project, "official", version);
+                return official.getMappingsFile(mcpRepo, project, channel, version);
             }
         }
-        throw new IllegalStateException("For ForgeGradle compatibility, the MCDevUtils plugin must be applied after the ForgeGradle one. ")
+        throw new IllegalStateException("For ForgeGradle compatibility, the MCDevUtils plugin must be applied after the one providing builtin channels. ")
     }
 }
